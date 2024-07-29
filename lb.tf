@@ -14,70 +14,91 @@ resource "aws_lb" "this" {
   name                             = lookup(var.aws_lb[count.index], "name")
   name_prefix                      = lookup(var.aws_lb[count.index], "name_prefix")
   preserve_host_header             = lookup(var.aws_lb[count.index], "preserve_host_header")
-  security_groups                  = []
-  subnets                          = []
-  tags                             = {}
+  security_groups                  = [
+    try(
+      element(aws_security_group.this.*.id, lookup(var.aws_lb[count.index], "security_groups_id"))
+    )
+  ]
+  subnets                          = [
+    try(
+      element(aws_subnet.this.*.id, lookup(var.aws_lb[count.index], "subnets_id"))
+    )
+  ]
+  tags                             = merge(
+    var.tags,
+    lookup(var.aws_lb[count.index], "tags"),
+    data.aws_default_tags.this.tags
+  )
 
   dynamic "access_logs" {
     for_each = lookup(var.aws_lb[count.index], "access_logs") == null ? [] : ["access_logs"]
     content {
-      bucket  = ""
-      enabled = true
-      prefix  = ""
+      bucket = try(
+        element(aws_s3_bucket.this.*.id, lookup(access_logs.value, "bucket_id"))
+      )
+      enabled = lookup(access_logs.value, "enabled")
+      prefix  = lookup(access_logs.value, "prefix")
     }
   }
 
   dynamic "subnet_mapping" {
     for_each = lookup(var.aws_lb[count.index], "subnet_mapping") == null ? [] : ["subnet_mapping"]
     content {
-      subnet_id            = ""
-      allocation_id        = ""
-      ipv6_address         = ""
-      private_ipv4_address = ""
+      subnet_id = try(
+        element(aws_subnet.this.*.id, lookup(subnet_mapping.value, "subnet_id"))
+      )
+      allocation_id        = lookup(subnet_mapping.value, "allocation_id")
+      ipv6_address         = lookup(subnet_mapping.value, "ipv6_address")
+      private_ipv4_address = lookup(subnet_mapping.value, "private_ipv6_address")
     }
   }
 }
 
 resource "aws_lb_target_group" "this" {
-  connection_termination             = ""
-  deregistration_delay               = ""
-  ip_address_type                    = ""
-  lambda_multi_value_headers_enabled = true
-  load_balancing_algorithm_type      = ""
-  name                               = ""
-  name_prefix                        = ""
-  port                               = 0
-  preserve_client_ip                 = ""
-  protocol                           = ""
-  protocol_version                   = ""
-  proxy_protocol_v2                  = true
-  slow_start                         = true
-  tags                               = {}
-  target_type                        = ""
-  vpc_id                             = ""
+  count                              = length(var.lb_target_group)
+  connection_termination             = lookup(var.lb_target_group[count.index], "connection_termination")
+  deregistration_delay               = lookup(var.lb_target_group[count.index], "deregistration_delay")
+  ip_address_type                    = lookup(var.lb_target_group[count.index], "ip_address_type")
+  lambda_multi_value_headers_enabled = lookup(var.lb_target_group[count.index], "lambda_multi_value_headers_enabled")
+  load_balancing_algorithm_type      = lookup(var.lb_target_group[count.index], "load_balancing_algorithm_type")
+  name                               = lookup(var.lb_target_group[count.index], "name")
+  name_prefix                        = lookup(var.lb_target_group[count.index], "name_prefix")
+  port                               = lookup(var.lb_target_group[count.index], "port")
+  preserve_client_ip                 = lookup(var.lb_target_group[count.index], "preserve_client_ip")
+  protocol                           = lookup(var.lb_target_group[count.index], "protocol")
+  protocol_version                   = lookup(var.lb_target_group[count.index], "protocol_version")
+  proxy_protocol_v2                  = lookup(var.lb_target_group[count.index], "proxy_protocol_v2")
+  slow_start                         = lookup(var.lb_target_group[count.index], "slow_start")
+  tags                               = merge(
+    var.tags,
+    lookup(var.lb_target_group[count.index], "tags"),
+    data.aws_default_tags.this.tags
+  )
+  target_type                        = lookup(var.lb_target_group[count.index], "target_type")
+  vpc_id                             = data.aws_vpc.this.id
 
   dynamic "health_check" {
-    for_each = ""
+    for_each = lookup(var.lb_target_group[count.index], "health_check") == null ? [] : ["health_check"]
     content {
-      enabled             = true
-      healthy_threshold   = 0
-      interval            = 0
-      matcher             = ""
-      path                = ""
-      port                = ""
-      protocol            = ""
-      timeout             = 0
-      unhealthy_threshold = 0
+      enabled             = lookup(health_check.value, "enabled")
+      healthy_threshold   = lookup(health_check.value, "healthy_threshold")
+      interval            = lookup(health_check.value, "interval")
+      matcher             = lookup(health_check.value, "matcher")
+      path                = lookup(health_check.value, "path")
+      port                = lookup(health_check.value, "port")
+      protocol            = lookup(health_check.value, "protocol")
+      timeout             = lookup(health_check.value, "timeout")
+      unhealthy_threshold = lookup(health_check.value, "unhealthy_threshold")
     }
   }
 
   dynamic "stickiness" {
-    for_each = ""
+    for_each = lookup(var.lb_target_group[count.index], "stickiness") == null ? [] : ["stickiness"]
     content {
-      type            = ""
-      cookie_duration = 0
-      cookie_name     = ""
-      enabled         = true
+      type            = lookup(stickiness.value, "type")
+      cookie_duration = lookup(stickiness.value, "cookie_duration")
+      cookie_name     = lookup(stickiness.value, "cookie_name")
+      enabled         = lookup(stickiness.value, "enabled")
     }
   }
 }

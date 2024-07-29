@@ -9,7 +9,7 @@ resource "aws_ecs_capacity_provider" "this" {
   name  = lookup(var.capacity_provider[count.index], "name")
   tags = merge(
     var.tags,
-    lookup(var.capacity_provider[count.index], tags),
+    lookup(var.capacity_provider[count.index], "tags"),
     data.aws_default_tags.this.tags
   )
 
@@ -39,7 +39,7 @@ resource "aws_ecs_cluster" "this" {
   name  = lookup(var.cluster[count.index], "name")
   tags = merge(
     var.tags,
-    lookup(var.cluster[count.index], tags),
+    lookup(var.cluster[count.index], "tags"),
     data.aws_default_tags.this.tags
   )
 
@@ -133,7 +133,7 @@ resource "aws_ecs_service" "this" {
   scheduling_strategy                = lookup(var.service[count.index], "scheduling_strategy")
   tags = merge(
     var.tags,
-    lookup(var.service[count.index], tags),
+    lookup(var.service[count.index], "tags"),
     data.aws_default_tags.this.tags
   )
   task_definition = try(
@@ -336,7 +336,7 @@ resource "aws_ecs_task_definition" "this" {
   skip_destroy             = lookup(var.task_definition[count.index], "skip_destroy")
   tags = merge(
     var.tags,
-    lookup(var.task_definition[count.index], tags),
+    lookup(var.task_definition[count.index], "tags"),
     data.aws_default_tags.this.tags
   )
   task_role_arn = var.ecs_task_definition_task_role
@@ -454,7 +454,7 @@ resource "aws_ecs_task_set" "this" {
   platform_version = lookup(var.task_set[count.index], "platform_version")
   tags = merge(
     var.tags,
-    lookup(var.task_set[count.index], tags),
+    lookup(var.task_set[count.index], "tags"),
     data.aws_default_tags.this.tags
   )
   wait_until_stable         = lookup(var.task_set[count.index], "wait_until_stable")

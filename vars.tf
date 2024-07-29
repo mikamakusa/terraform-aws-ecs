@@ -79,6 +79,11 @@ variable "aws_acmpca_certificate_authority_arn" {
   default = null
 }
 
+variable "s3_encryption_kms_master_key_id" {
+  type    = string
+  default = null
+}
+
 variable "capacity_provider" {
   type = list(object({
     id   = number
@@ -496,6 +501,45 @@ variable "lb_target_group" {
       cookie_duration = optional(number)
       cookie_name     = optional(string)
       enabled         = optional(bool)
+    })), [])
+  }))
+}
+
+variable "s3_bucket" {
+  type = list(object({
+    id                  = number
+    bucket              = optional(string)
+    bucket_prefix       = optional(string)
+    force_destroy       = optional(bool)
+    object_lock_enabled = optional(bool)
+    tags                = optional(map(string))
+  }))
+  default = []
+}
+
+variable "s3_bucket_versioning" {
+  type = list(object({
+    id                    = number
+    bucket_id             = any
+    expected_bucket_owner = optional(string)
+    mfa                   = optional(string)
+    versioning_configuration = optional(list(object({
+      status     = string
+      mfa_delete = optional(string)
+    })), [])
+  }))
+  default     = []
+  description = <<EOF
+EOF
+}
+
+variable "s3_bucket_server_side_encryption_configuration" {
+  type = list(object({
+    id                    = number
+    bucket_id             = any
+    expected_bucket_owner = optional(string)
+    apply_server_side_encryption_by_default = optional(list(object({
+      sse_algorithm = string
     })), [])
   }))
 }
